@@ -1,0 +1,256 @@
+type _ImmutableObjectStorageRefillResult = 
+ record {
+   success: opt bool;
+   topped_up_amount: opt nat;
+ };
+type _ImmutableObjectStorageRefillInformation = record {
+                                                  proposed_top_up_amount:
+                                                   opt nat;};
+type _ImmutableObjectStorageCreateCertificateResult = 
+ record {
+   blob_hash: text;
+   method: text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserProfile = record {name: text;};
+type UserApprovalInfo = 
+ record {
+   "principal": principal;
+   status: ApprovalStatus;
+ };
+type Time = int;
+type TeamRegistration = 
+ record {
+   captain: CaptainInfo;
+   creator: opt principal;
+   groupLink: opt text;
+   groupNumber: nat;
+   id: text;
+   idPassAssigned: bool;
+   logo: ExternalBlob;
+   members: vec TeamMember;
+   teamId: nat;
+   teamName: text;
+ };
+type TeamMember = 
+ record {
+   name: text;
+   playerId: opt text;
+ };
+type SocialMediaLinks = 
+ record {
+   discord: opt text;
+   instagram: opt text;
+   whatsapp: opt text;
+   youtube: opt text;
+ };
+type Result__1 = 
+ variant {
+   err: Error;
+   ok;
+ };
+type Result = 
+ record {
+   createdAt: Time;
+   description: text;
+   id: text;
+   image: ExternalBlob;
+   link: opt text;
+   title: text;
+ };
+type ReportMetadata = 
+ record {
+   "blob": ExternalBlob;
+   created: Time;
+   filename: text;
+   size: nat;
+ };
+type RegistrationSummary = 
+ record {
+   confirmedTeams: nat;
+   maxTeams: opt nat;
+   totalTeams: nat;
+ };
+type LogoUpload = 
+ record {
+   fileSize: nat;
+   logo: ExternalBlob;
+   teamName: text;
+   uploadTime: Time;
+ };
+type IdPassGroupLink = 
+ record {
+   createdAt: Time;
+   creator: principal;
+   groupId: nat;
+   groupLink: text;
+   groupNumber: nat;
+   id: text;
+ };
+type ExternalBlob = blob;
+type Error = 
+ variant {
+   AmbiguousAttribute: record {
+                         field: text;
+                         sources: vec text;
+                       };
+   FrontendOriginMismatch: record {
+                             expected: vec text;
+                             got: text;
+                           };
+   FrontendOriginsNotConfigured;
+   MalformedCandid;
+   MissingField: text;
+   MixedSsoSources: record {
+                      otherKeys: vec text;
+                      ssoKeys: vec text;
+                    };
+   NoAttributes;
+   Stale: record {ageNs: nat;};
+   UnknownNonce;
+   UntrustedSsoSource: record {domain: text;};
+ };
+type DuplicateReason = 
+ variant {
+   captainPhone;
+   teamName;
+ };
+type DuplicateEntry = 
+ record {
+   duplicateId: text;
+   duplicatedAt: Time;
+   originalId: text;
+   reason: DuplicateReason;
+ };
+type CaptainInfo = 
+ record {
+   name: text;
+   phone: text;
+ };
+type Banner = 
+ record {
+   createdAt: int;
+   id: text;
+   image: ExternalBlob;
+ };
+type ApprovalStatus = 
+ variant {
+   approved;
+   pending;
+   rejected;
+ };
+type Announcement = 
+ record {
+   createdAt: Time;
+   description: text;
+   id: text;
+   image: ExternalBlob;
+   link: opt text;
+   title: text;
+ };
+service : {
+  _immutableObjectStorageBlobsAreLive: (hashes: vec blob) -> (vec bool) query;
+  _immutableObjectStorageBlobsToDelete: () -> (vec blob) query;
+  _immutableObjectStorageConfirmBlobDeletion: (blobs: vec blob) -> ();
+  _immutableObjectStorageCreateCertificate: (blobHash: text) ->
+   (_ImmutableObjectStorageCreateCertificateResult);
+  _immutableObjectStorageRefillCashier: (refillInformation:
+   opt _ImmutableObjectStorageRefillInformation) ->
+   (_ImmutableObjectStorageRefillResult);
+  _immutableObjectStorageUpdateGatewayPrincipals: () -> ();
+  _initialize_access_control: () -> ();
+  _internet_identity_sign_in_finish: () -> (Result__1);
+  _internet_identity_sign_in_start: () -> (blob);
+  addGroupLink: (groupNumber: nat, link: text) -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  bulkUpdateIdPassStatus: (status: bool) -> ();
+  checkTeamLogoExists: (teamName: text) -> (bool) query;
+  closeRegistration: (status: bool) -> ();
+  createAnnouncement: (title: text, description: text, image: ExternalBlob,
+   link: opt text) -> (text);
+  createGroupLink: (groupId: nat, groupNumber: nat, groupLink: text) -> ();
+  createResult: (title: text, image: ExternalBlob, description: text, link:
+   opt text) -> (text);
+  deleteAnnouncement: (id: text) -> ();
+  deleteBanner: () -> (variant {
+                         err: text;
+                         ok: text;
+                       });
+  deleteDuplicateEntry: (id: text) -> ();
+  deleteGroupLink: (groupId: nat) -> ();
+  deleteRegistration: (id: text) -> ();
+  deleteReport: (filename: text) -> ();
+  deleteResult: (id: text) -> ();
+  getAllAnnouncements: () -> (vec Announcement) query;
+  getAllGroupLinks: () -> (vec record {
+                                 nat;
+                                 text;
+                               }) query;
+  getAllGroupLinksWithInfo: () -> (vec IdPassGroupLink) query;
+  getAllRegistrations: () -> (vec TeamRegistration) query;
+  getAllReports: () -> (vec ReportMetadata) query;
+  getAllResults: () -> (vec Result) query;
+  getAllTeamLogosPaginated: (pageNumber: nat, pageSize: nat) ->
+   (vec LogoUpload) query;
+  getAllTeamsWithGroupInfo: () -> (vec TeamRegistration) query;
+  getAllTeamsWithIdPassStatus: () -> (vec TeamRegistration) query;
+  getAnnouncement: (id: text) -> (Announcement) query;
+  getAnnouncementsCount: () -> (nat) query;
+  getBanner: () -> (opt Banner) query;
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getDuplicateRegistrations: () -> (vec DuplicateEntry) query;
+  getGroupLink: (groupNumber: nat) -> (opt text) query;
+  getGroupLinkById: (groupId: nat) -> (IdPassGroupLink) query;
+  getIdPassStatus: (teamId: nat) -> (bool) query;
+  getLogoByTeamName: (teamName: text) -> (LogoUpload) query;
+  getMaxTeamRegistrations: () -> (opt nat) query;
+  getRegistrationStatus: () -> (bool) query;
+  getRegistrationSummary: () -> (RegistrationSummary) query;
+  getReport: (filename: text) -> (ReportMetadata) query;
+  getResult: (id: text) -> (Result) query;
+  getResultsCount: () -> (nat) query;
+  getSocialMediaLinks: () -> (SocialMediaLinks) query;
+  getTeamById: (teamId: nat) -> (TeamRegistration) query;
+  getTeamDetailsViewer: () -> (vec TeamRegistration) query;
+  getTeamRegistration: (id: text) -> (TeamRegistration) query;
+  getTeamsByIdPassStatus: (status: bool) -> (vec TeamRegistration) query;
+  getUserProfile: (user: principal) -> (opt UserProfile) query;
+  initializeAccessControl: () -> ();
+  isCallerAdmin: () -> (bool) query;
+  isCallerApproved: () -> (bool) query;
+  listApprovals: () -> (vec UserApprovalInfo) query;
+  requestApproval: () -> ();
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  searchGroupLinkByTeam: (teamName: text, phoneNumber: text) ->
+   (opt IdPassGroupLink) query;
+  searchGroupLinks: (searchTerm: text) -> (vec IdPassGroupLink) query;
+  searchTeamsByIdPassStatus: (searchTerm: text) ->
+   (vec TeamRegistration) query;
+  searchTeamsByName: (searchTerm: text) -> (vec TeamRegistration) query;
+  searchTeamsByNameOrPhone: (searchTerm: text) ->
+   (vec TeamRegistration) query;
+  setApproval: (user: principal, status: ApprovalStatus) -> ();
+  setBanner: (image: ExternalBlob) -> (variant {
+                                         err: text;
+                                         ok: text;
+                                       });
+  setMaxTeamRegistrations: (limit: opt nat) -> ();
+  storeReport: (filename: text, "blob": ExternalBlob, size: nat) -> ();
+  submitRegistration: (teamName: text, logo: ExternalBlob, captain:
+   CaptainInfo, members: vec TeamMember) -> (text);
+  updateAnnouncement: (id: text, title: text, description: text, image:
+   ExternalBlob, link: opt text) -> ();
+  updateGroupLink: (groupId: nat, newLink: text) -> ();
+  updateIdPassStatus: (teamId: nat, status: bool) -> ();
+  updateLogo: (id: text, newLogo: ExternalBlob) -> ();
+  updateResult: (id: text, title: text, image: ExternalBlob, description:
+   text, link: opt text) -> ();
+  updateSocialMediaLinks: (newLinks: SocialMediaLinks) -> ();
+  uploadTeamLogo: (teamName: text, logo: ExternalBlob, fileSize: nat) -> ();
+}
